@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import json, os, sys
+from pathlib import Path
+
 
 ###
 ### Ideas on where this script may go.
@@ -83,15 +85,15 @@ def readConfig(configPath: str):
 def writeConfig(NewConfig: dict, ExistingConfig: dict):
     with open("./Configs/Merged/ubercombat-vars.inc", 'w') as newFile:
         for character in NewConfig.keys():
-            for key in NewConfig[character].keys():
-                for nonVariableItem in NewConfig[character][key]['NonVariableItems']:
-                    newFile.write(f"{nonVariableItem}\n")
-                
-                if key in ExistingConfig[character].keys():
-                    newFile.write(f"    var {key} {ExistingConfig[character][key]['Value']}\n")
-                else:
-                    #This is the opportunity to ask what value you would like in the new variable
-                    newFile.write(f"    var {key} {NewConfig[character][key]['Value']}\n")
+            if character in ExistingConfig.keys():
+                for key in NewConfig[character].keys():
+                    for nonVariableItem in NewConfig[character][key]['NonVariableItems']:
+                        newFile.write(f"{nonVariableItem}\n")
+                    if key in ExistingConfig[character].keys():
+                        newFile.write(f"    var {key} {ExistingConfig[character][key]['Value']}\n")
+                    else:
+                        #This is the opportunity to ask what value you would like in the new variable
+                        newFile.write(f"    var {key} {NewConfig[character][key]['Value']}\n")
 
         footer = """#############################################################################################################################################################################
 #############################################################################################################################################################################
@@ -115,19 +117,30 @@ END.OF.VARS:
     return 0
 
 if __name__ == '__main__':
+    Path("./Configs/Merged").mkdir(parents=True, exist_ok=True)
+    Path("./Configs/Existing").mkdir(parents=True, exist_ok=True)
+
+    if not Path("./Configs/Existing/ubercombat-vars.inc").exists():
+        #raise Exception("You must place your existing config in ./Configs/Existing") 
+        print("You must place your existing config in ./Configs/Existing")
+        sys.exit(1)
+
+
     ExistingConfig = readConfig('./Configs/Existing/ubercombat-vars.inc')
     NewConfig = readConfig('./Configs/UberLatest/ubercombat-vars.inc')
     
     print("Checking for changes to variables.")
-    for character in NewConfig.keys():
-        if NewConfig[character].keys() == ExistingConfig[character].keys():
-            print(f"{character} variables match.")
-        else:
-            print(f"{character} variables DO NOT match.")
-            print("These are the mismatched variables:")
-            print(set(NewConfig[character].keys()).symmetric_difference(set(ExistingConfig[character].keys())))
+    # for character in NewConfig.keys():
+    #     if NewConfig[character].keys() == ExistingConfig[character].keys():
+    #         print(f"{character} variables match.")
+    #     else:
+    #         print(f"{character} variables DO NOT match.")
+    #         print("These are the mismatched variables:")
+    #         print(set(NewConfig[character].keys()).symmetric_difference(set(ExistingConfig[character].keys())))
     
-            #query_yes_no("These variables do not match, would you like to remedy?n")
-            writeConfig(NewConfig, ExistingConfig)
+    #         #query_yes_no("These variables do not match, would you like to remedy?n")
+            
+    writeConfig(NewConfig, ExistingConfig)
+    print("Your new merged config now exists in ./Configs/Merged!")
 
         
